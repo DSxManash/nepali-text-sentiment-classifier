@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NepSentiX - Nepali Sentiment Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <span>NepSentiX</span> — Nepali Sentiment Analyzer
+    </header>
+
+    <div class="overlay">
+        <div class="container">
+            <h1>Analyze Sentiment</h1>
+
+            {% if alert %}
+                <div class="alert-box">{{ alert }}</div>
+            {% endif %}
+
+            <form id="sentiment-form" method="POST" action="/" autocomplete="off">
+                <label for="text">नेपालीमा लेख्नुहोस्:</label>
+                <textarea id="text" name="text" placeholder="यहाँ नेपाली वाक्य लेख्नुहोस्..." autocomplete="off" required>{% if text %}{{ text }}{% endif %}</textarea>
+                <div class="word-counter"><span id="word-count">0</span> / 100 words</div>
+                
+                <div class="btn-group">
+                    <button type="submit" id="submit-btn">Analyze</button>
+                    <button type="button" class="btn-clear" onclick="clearForm()">Clear</button>
+                </div>
+                <div class="shortcut-hint">Press Ctrl + Enter to submit</div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing...</p>
+            </div>
+
+            {% if sentiment %}
+                <div id="result-section" class="result {{ 'positive' if sentiment == 'Positive' else 'negative' }}">
+                    <p><strong>Sentiment:</strong> {{ sentiment }}</p>
+                    {% if confidence %}
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidence-fill" data-confidence="{{ confidence }}"></div>
+                        </div>
+                        <p class="confidence-text">Confidence: {{ confidence }}%</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="sample-texts">
+                <h3>Try these samples:</h3>
+                <button class="sample-btn positive-sample" onclick="useSample('तपाईंको काम उत्कृष्ट छ')">तपाईंको काम उत्कृष्ट छ</button>
+                <button class="sample-btn negative-sample" onclick="useSample('मलाई यो मन पर्दैन')">मलाई यो मन पर्दैन</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 NepSentiX - Built for Nepali language.
+    </footer>
+
+    <script>
+        const textarea = document.getElementById('text');
+        const wordCount = document.getElementById('word-count');
+        const form = document.getElementById('sentiment-form');
+        const loading = document.getElementById('loading');
+        const submitBtn = document.getElementById('submit-btn');
+        const MAX_WORDS = 100;
+
+        function countWords(text) {
+            return text.trim() ? text.trim().split(/\s+/).length : 0;
+        }
+
+        textarea.addEventListener('input', function() {
+            const count = countWords(this.value);
+            wordCount.textContent = count;
+            wordCount.style.color = count > MAX_WORDS ? '#e74c3c' : 'inherit';
+        });
+
+        wordCount.textContent = countWords(textarea.value);
+
+        form.addEventListener('submit', function() {
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Analyzing...';
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                form.submit();
+            }
+        });
+
+        function useSample(text) {
+            textarea.value = text;
+            wordCount.textContent = countWords(text);
+            textarea.focus();
+        }
+
+        function clearForm() {
+            textarea.value = '';
+            wordCount.textContent = '0';
+            wordCount.style.color = 'inherit';
+            const resultSection = document.getElementById('result-section');
+            if (resultSection) {
+                resultSection.style.display = 'none';
+            }
+            const alertBox = document.querySelector('.alert-box');
+            if (alertBox) {
+                alertBox.style.display = 'none';
+            }
+            textarea.focus();
+        }
+
+        const confidenceFill = document.getElementById('confidence-fill');
+        if (confidenceFill) {
+            confidenceFill.style.width = confidenceFill.dataset.confidence + '%';
+        }
+    </script>
+</body>
+</html>
